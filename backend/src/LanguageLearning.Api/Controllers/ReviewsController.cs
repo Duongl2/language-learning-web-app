@@ -1,4 +1,4 @@
-
+using LanguageLearning.Application.DTOs.Reviews;
 using LanguageLearning.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -28,4 +28,17 @@ public sealed class ReviewsController : ControllerBase
 
         return Ok(cards);
     }
+
+    [HttpPost]
+    public async Task<IActionResult> SubmitReview(
+        [FromBody] SubmitReviewRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _reviewService.SubmitReviewAsync(
+            request,
+            cancellationToken);
+
+        return Ok(result);
+    }
+
 }

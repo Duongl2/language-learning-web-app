@@ -1,4 +1,4 @@
-
+using LanguageLearning.Application.Common.Exceptions;
 using LanguageLearning.Application.Interfaces;
 using LanguageLearning.Domain.Entities;
 using LanguageLearning.Infrastructure.Data;
@@ -64,9 +64,38 @@ public sealed class ReviewRepository : IReviewRepository
             cancellationToken);
     }
 
+    public async Task<ReviewEvent?> GetReviewEventByClientEventIdAsync(
+        Guid userId,
+        Guid clientEventId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.ReviewEvents
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                reviewEvent =>
+                    reviewEvent.UserId == userId &&
+                    reviewEvent.ClientEventId == clientEventId,
+                cancellationToken);
+    }
+
     public async Task SaveChangesAsync(
         CancellationToken cancellationToken = default)
     {
-        await _context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (
+            ex.InnerException is MySqlConnector.MySqlException mysqlException &&
+            mysqlException.Number == 1062 &&
+            mysqlException.Message.Contains(
+                "ClientEventId",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            _context.ChangeTracker.Clear();
+
+            throw new DuplicateReviewEventException();
+        }
     }
+
 }
