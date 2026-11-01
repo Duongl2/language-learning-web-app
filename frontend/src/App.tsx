@@ -182,7 +182,7 @@ useEffect(() => {
         </div>
 
         <div className="p-3 border-t-2 border-[#262626] space-y-2">
-          <button className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-stone-600 hover:text-stone-900 transition">
+          <button type="button" onClick={() => navigate('/profile')} className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-stone-600 hover:text-stone-900 transition">
             <SettingOutlined />
             <span>Cài đặt</span>
           </button>

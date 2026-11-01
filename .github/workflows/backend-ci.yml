@@ -1,3 +1,4 @@
+
 name: Backend CI
 
 on:
@@ -6,6 +7,7 @@ on:
     paths:
       - 'backend/**'
       - '.github/workflows/backend-ci.yml'
+
   pull_request:
     branches: [main, develop]
     paths:
@@ -26,7 +28,16 @@ jobs:
           MYSQL_PASSWORD: app_password_123
         ports:
           - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      ISSUE27_TEST_CONNECTION: "Server=localhost;Port=3306;Database=language_learning_test_db;User=app_user;Password=app_password_123;TreatTinyAsBoolean=true;"
+      ConnectionStrings__DefaultConnection: "Server=localhost;Port=3306;Database=language_learning_test_db;User=app_user;Password=app_password_123;TreatTinyAsBoolean=true;"
+      Jwt__SecretKey: "ci_only_jwt_secret_key_at_least_32_characters_12345"
 
     steps:
       - name: Checkout code
@@ -43,7 +54,26 @@ jobs:
       - name: Build solution
         run: dotnet build backend/LanguageLearning.sln --configuration Release --no-restore
 
-      - name: Run unit & integration tests
-        run: dotnet test backend/LanguageLearning.sln --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test_results.trx"
-        env:
-          ConnectionStrings__DefaultConnection: "Server=localhost;Port=3306;Database=language_learning_test_db;User=app_user;Password=app_password_123;"
+      - name: Enable MySQL trigger creation
+        run: |
+          docker exec "${{ job.services.mysql.id }}" \
+            mysql -uroot -proot_password_123 \
+            -e "SET GLOBAL log_bin_trust_function_creators = 1;"
+
+      - name: Install EF Core CLI
+        run: dotnet tool install --global dotnet-ef --version 8.0.2
+
+      - name: Apply database migrations
+        run: |
+          dotnet ef database update \
+            --project backend/src/LanguageLearning.Infrastructure \
+            --startup-project backend/src/LanguageLearning.Api \
+            --connection "$ISSUE27_TEST_CONNECTION"
+
+      - name: Run unit and integration tests
+        run: |
+          dotnet test backend/LanguageLearning.sln \
+            --configuration Release \
+            --no-build \
+            --verbosity normal \
+            --logger "trx;LogFileName=test_results.trx"

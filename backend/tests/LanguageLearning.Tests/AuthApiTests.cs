@@ -221,6 +221,13 @@ public class AuthApiTests
             new(StringComparer.OrdinalIgnoreCase);
         private User? _pendingUser;
 
+        public Task<User?> GetByIdAsync(
+            Guid id,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(_users.Values.FirstOrDefault(user => user.Id == id));
+        }
+
         public Task<User?> GetByEmailAsync(
             string email,
             CancellationToken cancellationToken = default)

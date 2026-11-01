@@ -26,4 +26,10 @@ public interface IReviewRepository
 
     Task SaveChangesAsync(
         CancellationToken cancellationToken = default);
+
+    Task<ReviewEvent?> GetReviewEventByClientEventIdAsync(
+        Guid userId,
+        Guid clientEventId,
+        CancellationToken cancellationToken = default);
+
 }
