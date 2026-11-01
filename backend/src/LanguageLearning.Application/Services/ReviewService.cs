@@ -2,6 +2,7 @@
 using LanguageLearning.Application.Common.Exceptions;
 using LanguageLearning.Application.DTOs.Reviews;
 using LanguageLearning.Application.Interfaces;
+using LanguageLearning.Application.Srs;
 
 namespace LanguageLearning.Application.Services;
 
@@ -58,7 +59,11 @@ public sealed class ReviewService : IReviewService
             Front = schedule.Card.Front,
             Back = schedule.Card.Back,
             DueAt = schedule.DueAt,
-            AlgorithmVersion = schedule.AlgorithmVersion
+            AlgorithmVersion = schedule.AlgorithmVersion,
+
+            Intervals = schedule.AlgorithmVersion == "srs-v1"
+                ? ReviewIntervalCalculator.Calculate(schedule.StateJson)
+                : null
         }).ToList();
     }
 }

@@ -14,4 +14,6 @@ public sealed class DueCardResponse
     public DateTime DueAt { get; set; }
 
     public string AlgorithmVersion { get; set; } = string.Empty;
+
+    public ReviewIntervalsResponse? Intervals { get; set; }
 }
