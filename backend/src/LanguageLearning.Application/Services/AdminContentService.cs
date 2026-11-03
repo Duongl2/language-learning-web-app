@@ -135,6 +135,40 @@ public class AdminContentService
         await _repository.SaveAsync(ct);
     }
 
+    public async Task DeleteUnitAsync(Guid id, bool confirm, CancellationToken ct)
+    {
+        var unit = await RequiredAsync<Unit>(id, ct);
+        if (await _repository.HasDependentsAsync<Unit>(id, ct) && !confirm)
+            throw new ConflictException("Unit has lessons. Repeat with confirm=true to delete them.");
+        if (await _repository.UnitHasLearningHistoryAsync(id, ct))
+            throw new ConflictException("Unit has learner history and cannot be deleted.");
+        _repository.Remove(unit);
+        await _repository.SaveAsync(ct);
+    }
+
+    public async Task<CourseResponse> SetCoursePublishedAsync(Guid id, bool published, CancellationToken ct)
+    {
+        var course = await RequiredAsync<Course>(id, ct);
+        if (published)
+        {
+            var language = await RequiredAsync<Language>(course.LanguageId, ct);
+            if (!language.IsActive) throw new ConflictException("Course language is inactive.");
+        }
+        course.Status = published ? ContentStatus.Published : ContentStatus.Draft;
+        course.UpdatedAt = DateTime.UtcNow;
+        await _repository.SaveAsync(ct);
+        return Map(course);
+    }
+
+    public async Task<LessonResponse> SetLessonPublishedAsync(Guid id, bool published, CancellationToken ct)
+    {
+        var lesson = await RequiredAsync<Lesson>(id, ct);
+        lesson.Status = published ? ContentStatus.Published : ContentStatus.Draft;
+        lesson.UpdatedAt = DateTime.UtcNow;
+        await _repository.SaveAsync(ct);
+        return Map(lesson);
+    }
+
     private async Task<T> RequiredAsync<T>(Guid id, CancellationToken ct) where T : BaseEntity =>
         await _repository.FindAsync<T>(id, ct) ?? throw new NotFoundException($"{typeof(T).Name} not found.");
 

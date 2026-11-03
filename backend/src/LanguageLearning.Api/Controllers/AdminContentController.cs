@@ -68,11 +68,20 @@ public class AdminContentController : ControllerBase
     [HttpPut("units/{id:guid}")]
     public async Task<IActionResult> UpdateUnit(Guid id, UnitInput input, CancellationToken ct) => Ok(await _content.UpdateUnitAsync(id, input, ct));
     [HttpDelete("units/{id:guid}")]
-    public async Task<IActionResult> DeleteUnit(Guid id, CancellationToken ct)
+    public async Task<IActionResult> DeleteUnit(Guid id, [FromQuery] bool confirm, CancellationToken ct)
     {
-        await _content.DeleteAsync<Unit>(id, ct);
+        await _content.DeleteUnitAsync(id, confirm, ct);
         return NoContent();
     }
+
+    [HttpPost("courses/{id:guid}/publish")]
+    public async Task<IActionResult> PublishCourse(Guid id, CancellationToken ct) => Ok(await _content.SetCoursePublishedAsync(id, true, ct));
+    [HttpPost("courses/{id:guid}/unpublish")]
+    public async Task<IActionResult> UnpublishCourse(Guid id, CancellationToken ct) => Ok(await _content.SetCoursePublishedAsync(id, false, ct));
+    [HttpPost("lessons/{id:guid}/publish")]
+    public async Task<IActionResult> PublishLesson(Guid id, CancellationToken ct) => Ok(await _content.SetLessonPublishedAsync(id, true, ct));
+    [HttpPost("lessons/{id:guid}/unpublish")]
+    public async Task<IActionResult> UnpublishLesson(Guid id, CancellationToken ct) => Ok(await _content.SetLessonPublishedAsync(id, false, ct));
 
     [HttpGet("lessons")]
     public async Task<IActionResult> ListLessons([FromQuery] PaginationParams pagination, CancellationToken ct) => Ok(await _content.ListLessonsAsync(pagination, ct));

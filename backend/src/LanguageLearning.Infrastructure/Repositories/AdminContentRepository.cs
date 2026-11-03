@@ -18,7 +18,12 @@ public class AdminContentRepository : IAdminContentRepository
     {
         var query = _context.Set<T>().AsNoTracking();
         var total = await query.CountAsync(cancellationToken);
-        var items = await query.OrderBy(entity => entity.CreatedAt).ThenBy(entity => entity.Id)
+        var ordered = typeof(T) == typeof(Unit)
+            ? (IQueryable<T>)(object)((IQueryable<Unit>)(object)query).OrderBy(unit => unit.CourseId).ThenBy(unit => unit.SortOrder).ThenBy(unit => unit.Id)
+            : typeof(T) == typeof(Lesson)
+                ? (IQueryable<T>)(object)((IQueryable<Lesson>)(object)query).OrderBy(lesson => lesson.UnitId).ThenBy(lesson => lesson.SortOrder).ThenBy(lesson => lesson.Id)
+                : query.OrderBy(entity => entity.CreatedAt).ThenBy(entity => entity.Id);
+        var items = await ordered
             .Skip((pagination.Page - 1) * pagination.PageSize).Take(pagination.PageSize)
             .ToListAsync(cancellationToken);
         return new PagedResponse<T>(items, pagination.Page, pagination.PageSize, total);
@@ -50,6 +55,10 @@ public class AdminContentRepository : IAdminContentRepository
                 await _context.QuizAttempts.AnyAsync(value => value.LessonId == id, cancellationToken);
         return false;
     }
+
+    public Task<bool> UnitHasLearningHistoryAsync(Guid id, CancellationToken cancellationToken = default) =>
+        _context.Lessons.AnyAsync(lesson => lesson.UnitId == id &&
+            (lesson.LessonProgresses.Any() || lesson.QuizAttempts.Any()), cancellationToken);
 
     public async Task SaveAsync(CancellationToken cancellationToken = default)
     {
