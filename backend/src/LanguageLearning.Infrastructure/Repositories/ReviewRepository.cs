@@ -1,3 +1,4 @@
+
 using LanguageLearning.Application.Common.Exceptions;
 using LanguageLearning.Application.Interfaces;
 using LanguageLearning.Domain.Entities;
@@ -29,6 +30,22 @@ public sealed class ReviewRepository : IReviewRepository
                 schedule.Card.DeckId == deckId &&
                 !schedule.Card.Deck.IsDeleted &&
                 schedule.DueAt <= nowUtc)
+            .OrderBy(schedule => schedule.DueAt)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<CardSchedule>> GetDeckSchedulesAsync(
+        Guid userId,
+        Guid deckId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.CardSchedules
+            .AsNoTracking()
+            .Include(schedule => schedule.Card)
+            .Where(schedule =>
+                schedule.UserId == userId &&
+                schedule.Card.DeckId == deckId &&
+                !schedule.Card.Deck.IsDeleted)
             .OrderBy(schedule => schedule.DueAt)
             .ToListAsync(cancellationToken);
     }
@@ -97,5 +114,4 @@ public sealed class ReviewRepository : IReviewRepository
             throw new DuplicateReviewEventException();
         }
     }
-
 }

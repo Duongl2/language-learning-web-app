@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 
 import type { DeckResponse } from '../types/deck.types';
-
+import { OfflineDownloadButton } from './OfflineDownloadButton';
 interface DeckCardProps {
   deck: DeckResponse;
   languageName?: string;
@@ -103,8 +103,13 @@ export function DeckCard({
         </span>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Link
-            to={`/reviews/${deck.id}`}
+            <OfflineDownloadButton
+              deckId={deck.id}
+              deckTitle={deck.title}
+            />
+
+            <Link
+              to={`/reviews/${deck.id}`}
             className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-green-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-green-700"
             aria-label={`Ôn tập bộ thẻ ${deck.title}`}
           >

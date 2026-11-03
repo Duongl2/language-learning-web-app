@@ -10,6 +10,10 @@ public interface IReviewRepository
         Guid deckId,
         DateTime nowUtc,
         CancellationToken cancellationToken = default);
+    Task<List<CardSchedule>> GetDeckSchedulesAsync(
+        Guid userId,
+        Guid deckId,
+        CancellationToken cancellationToken = default);
 
     Task<CardSchedule?> GetScheduleAsync(
         Guid userId,

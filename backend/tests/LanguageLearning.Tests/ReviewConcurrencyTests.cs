@@ -222,7 +222,14 @@ private sealed class SynchronizingReviewRepository
             CancellationToken cancellationToken = default)
             => _inner.GetDueSchedulesAsync(
                 userId, deckId, nowUtc, cancellationToken);
-
+        public Task<List<CardSchedule>> GetDeckSchedulesAsync(
+            Guid userId,
+            Guid deckId,
+            CancellationToken cancellationToken = default)
+            => _inner.GetDeckSchedulesAsync(
+                userId,
+                deckId,
+                cancellationToken);
         public Task<CardSchedule?> GetScheduleAsync(
             Guid userId,
             Guid cardId,

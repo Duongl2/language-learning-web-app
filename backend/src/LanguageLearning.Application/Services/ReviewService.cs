@@ -182,6 +182,44 @@ public sealed class ReviewService : IReviewService
         }
     }
 
+    public async Task<List<DeckScheduleResponse>> GetDeckSchedulesAsync(
+        Guid deckId,
+        CancellationToken cancellationToken = default)
+    {
+        if (deckId == Guid.Empty)
+        {
+            throw new ArgumentException(
+                "A valid deck ID is required.");
+        }
+
+        var userId = _currentUserService.GetRequiredUserId();
+
+        var deck = await _deckRepository.GetByIdAsync(
+            deckId,
+            cancellationToken);
+
+        if (deck == null ||
+            (deck.OwnerId != userId && !deck.IsPublic))
+        {
+            throw new NotFoundException(
+                "The requested deck does not exist or is not accessible.");
+        }
+
+        var schedules = await _reviewRepository.GetDeckSchedulesAsync(
+            userId,
+            deckId,
+            cancellationToken);
+
+        return schedules.Select(schedule => new DeckScheduleResponse
+        {
+            CardId = schedule.CardId,
+            DueAt = schedule.DueAt,
+            StateJson = schedule.StateJson,
+            AlgorithmVersion = schedule.AlgorithmVersion,
+            LastReviewedAt = schedule.LastReviewedAt
+        }).ToList();
+    }
+
     public async Task<List<DueCardResponse>> GetDueCardsAsync(
         Guid deckId,
         CancellationToken cancellationToken = default)

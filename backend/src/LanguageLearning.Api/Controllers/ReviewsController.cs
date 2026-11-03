@@ -17,6 +17,18 @@ public sealed class ReviewsController : ControllerBase
         _reviewService = reviewService;
     }
 
+    [HttpGet("decks/{deckId:guid}/schedules")]
+    public async Task<IActionResult> GetDeckSchedules(
+        Guid deckId,
+        CancellationToken cancellationToken)
+    {
+        var schedules = await _reviewService.GetDeckSchedulesAsync(
+            deckId,
+            cancellationToken);
+
+        return Ok(schedules);
+    }
+
     [HttpGet("due")]
     public async Task<IActionResult> GetDueCards(
         [FromQuery] Guid deckId,
