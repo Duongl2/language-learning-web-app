@@ -35,6 +35,7 @@ public static class DependencyInjection
         services.AddScoped<IDeckRepository, DeckRepository>();
         services.AddScoped<ICardRepository, CardRepository>();
         services.AddScoped<IReviewRepository, ReviewRepository>();
+        services.AddScoped<ISyncRepository, SyncRepository>();
         services.AddScoped<ILanguageRepository, LanguageRepository>();
         services.AddScoped<IAdminContentRepository, AdminContentRepository>();
         services.AddScoped<IPublishedContentRepository, PublishedContentRepository>();

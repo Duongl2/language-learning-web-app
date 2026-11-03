@@ -5,7 +5,7 @@ namespace LanguageLearning.Application.Interfaces;
 
 public interface IPublishedContentRepository
 {
-    Task<PagedResponse<Course>> ListCoursesAsync(PaginationParams pagination, Guid? languageId, CancellationToken ct);
+    Task<PagedResponse<Course>> ListCoursesAsync(PaginationParams pagination, Guid? languageId, string? level, CancellationToken ct);
     Task<Course?> GetCourseAsync(Guid id, CancellationToken ct);
     Task<PagedResponse<Unit>> ListUnitsAsync(Guid courseId, PaginationParams pagination, CancellationToken ct);
     Task<Unit?> GetUnitAsync(Guid id, CancellationToken ct);

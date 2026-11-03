@@ -1,5 +1,5 @@
 
-import { StrictMode } from 'react';
+import { StrictMode, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
@@ -15,8 +15,10 @@ import { AuthPage } from './features/auth/AuthPage.tsx';
 import { AuthProvider } from './features/auth/AuthProvider.tsx';
 import { ProtectedRoute } from './features/auth/ProtectedRoute.tsx';
 import { ProfilePage } from './features/profile/ProfilePage.tsx';
+import { CourseCatalogPage, CourseDetailPage, LessonPage } from './features/courses/courseRoutes.tsx';
 import { ReviewSessionPage } from './features/reviews/ReviewSessionPage.tsx';
 import './index.css';
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -43,6 +45,7 @@ createRoot(document.getElementById('root')!).render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
+          <Suspense fallback={<div className="graph-paper min-h-screen p-8 text-stone-600">Đang tải trang...</div>}>
           <Routes>
             <Route
               path="/login"
@@ -73,6 +76,19 @@ createRoot(document.getElementById('root')!).render(
             />
 
             <Route
+              path="/courses"
+              element={<ProtectedRoute><CourseCatalogPage /></ProtectedRoute>}
+            />
+            <Route
+              path="/courses/:courseId"
+              element={<ProtectedRoute><CourseDetailPage /></ProtectedRoute>}
+            />
+            <Route
+              path="/lessons/:lessonId"
+              element={<ProtectedRoute><LessonPage /></ProtectedRoute>}
+            />
+
+            <Route
               path="/reviews/:deckId"
               element={
                 <ProtectedRoute>
@@ -86,6 +102,7 @@ createRoot(document.getElementById('root')!).render(
               element={<Navigate to="/" replace />}
             />
           </Routes>
+          </Suspense>
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>

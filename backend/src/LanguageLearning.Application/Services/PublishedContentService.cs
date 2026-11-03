@@ -11,9 +11,9 @@ public class PublishedContentService
 
     public PublishedContentService(IPublishedContentRepository repository) => _repository = repository;
 
-    public async Task<PagedResponse<CourseResponse>> ListCoursesAsync(PaginationParams pagination, Guid? languageId, CancellationToken ct)
+    public async Task<PagedResponse<CourseResponse>> ListCoursesAsync(PaginationParams pagination, Guid? languageId, string? level, CancellationToken ct)
     {
-        var page = await _repository.ListCoursesAsync(pagination, languageId, ct);
+        var page = await _repository.ListCoursesAsync(pagination, languageId, level, ct);
         return new PagedResponse<CourseResponse>(page.Items.Select(course => new CourseResponse(
             course.Id, course.LanguageId, course.Title, course.Level, course.Description, course.Status)).ToList(),
             page.Page, page.PageSize, page.TotalItems);

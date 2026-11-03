@@ -105,6 +105,11 @@ useEffect(() => {
               HỌC TẬP
             </span>
 
+            <button type="button" onClick={() => navigate('/courses')} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-stone-600 hover:bg-stone-200/50 transition text-left">
+              <BookOutlined />
+              <span>Khóa học</span>
+            </button>
+
             <button
               onClick={() => setCurrentView('lessonList')}
               className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition text-left ${
