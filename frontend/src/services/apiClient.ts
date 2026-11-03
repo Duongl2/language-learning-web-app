@@ -83,19 +83,33 @@ export function refreshSession(): Promise<boolean> {
     try {
       const response = await sendRequest(
         '/auth/refresh',
-        { method: 'POST', body: JSON.stringify({ refreshToken }) },
+        {
+          method: 'POST',
+          body: JSON.stringify({ refreshToken }),
+        },
         null
       );
+
       const session = await parseResponse<AuthResponse>(response);
+
       if (getSessionVersion() !== version) {
         return false;
       }
+
       saveAuthSession(session);
       return true;
-    } catch {
-      if (getSessionVersion() === version) {
+    } catch (error) {
+      const isInvalidToken =
+        error instanceof ApiError &&
+        [400, 401, 403].includes(error.status);
+
+      if (
+        isInvalidToken &&
+        getSessionVersion() === version
+      ) {
         clearAuthSession();
       }
+
       return false;
     } finally {
       refreshPromise = null;
