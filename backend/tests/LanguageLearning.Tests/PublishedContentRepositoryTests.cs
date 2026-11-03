@@ -32,13 +32,15 @@ public class PublishedContentRepositoryTests
 
         var repository = new PublishedContentRepository(context);
         var pagination = new PaginationParams();
-        Assert.Empty((await repository.ListCoursesAsync(pagination, null, default)).Items);
+        Assert.Empty((await repository.ListCoursesAsync(pagination, null, null, default)).Items);
         Assert.Null(await repository.GetLessonAsync(publishedLesson.Id, default));
 
         var admin = new AdminContentService(new AdminContentRepository(context));
         await admin.SetCoursePublishedAsync(course.Id, true, default);
 
-        Assert.Single((await repository.ListCoursesAsync(pagination, null, default)).Items);
+        Assert.Single((await repository.ListCoursesAsync(pagination, null, null, default)).Items);
+        Assert.Single((await repository.ListCoursesAsync(pagination, language.Id, "a1", default)).Items);
+        Assert.Empty((await repository.ListCoursesAsync(pagination, language.Id, "A2", default)).Items);
         Assert.Equal(new[] { firstUnit.Id, secondUnit.Id },
             (await repository.ListUnitsAsync(course.Id, pagination, default)).Items.Select(unit => unit.Id));
         Assert.Equal(publishedLesson.Id,

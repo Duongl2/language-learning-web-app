@@ -15,8 +15,8 @@ public class PublishedContentController : ControllerBase
     public PublishedContentController(PublishedContentService content) => _content = content;
 
     [HttpGet("courses")]
-    public async Task<IActionResult> ListCourses([FromQuery] PaginationParams pagination, [FromQuery] Guid? languageId, CancellationToken ct) =>
-        Ok(await _content.ListCoursesAsync(pagination, languageId, ct));
+    public async Task<IActionResult> ListCourses([FromQuery] PaginationParams pagination, [FromQuery] Guid? languageId, [FromQuery] string? level, CancellationToken ct) =>
+        Ok(await _content.ListCoursesAsync(pagination, languageId, level, ct));
 
     [HttpGet("courses/{id:guid}")]
     public async Task<IActionResult> GetCourse(Guid id, CancellationToken ct) =>

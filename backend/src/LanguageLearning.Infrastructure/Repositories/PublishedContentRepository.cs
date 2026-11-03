@@ -13,12 +13,17 @@ public class PublishedContentRepository : IPublishedContentRepository
 
     public PublishedContentRepository(AppDbContext context) => _context = context;
 
-    public async Task<PagedResponse<Course>> ListCoursesAsync(PaginationParams pagination, Guid? languageId, CancellationToken ct)
+    public async Task<PagedResponse<Course>> ListCoursesAsync(PaginationParams pagination, Guid? languageId, string? level, CancellationToken ct)
     {
         var query = _context.Courses.AsNoTracking().Where(course =>
             course.Status == ContentStatus.Published && course.Language.IsActive);
         if (languageId.HasValue)
             query = query.Where(course => course.LanguageId == languageId.Value);
+        if (!string.IsNullOrWhiteSpace(level))
+        {
+            var selectedLevel = level.Trim().ToUpperInvariant();
+            query = query.Where(course => course.Level.ToUpper() == selectedLevel);
+        }
         var total = await query.CountAsync(ct);
         var items = await query.OrderBy(course => course.Title).ThenBy(course => course.Id)
             .Skip((pagination.Page - 1) * pagination.PageSize).Take(pagination.PageSize).ToListAsync(ct);
