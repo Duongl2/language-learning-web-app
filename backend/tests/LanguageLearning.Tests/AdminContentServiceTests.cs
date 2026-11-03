@@ -89,4 +89,35 @@ public class AdminContentServiceTests
         Assert.Equal(11, page.TotalItems);
         Assert.Equal("ja", Assert.Single(page.Items).Code);
     }
+
+    [Fact]
+    public async Task UnitWithLessonsRequiresConfirmation()
+    {
+        var unit = new Unit();
+        _repository.Setup(repository => repository.FindAsync<Unit>(unit.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(unit);
+        _repository.Setup(repository => repository.HasDependentsAsync<Unit>(unit.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        await Assert.ThrowsAsync<ConflictException>(() => _service.DeleteUnitAsync(unit.Id, false, default));
+        _repository.Verify(repository => repository.Remove(It.IsAny<Unit>()), Times.Never);
+
+        await _service.DeleteUnitAsync(unit.Id, true, default);
+        _repository.Verify(repository => repository.Remove(unit), Times.Once);
+    }
+
+    [Fact]
+    public async Task ConfirmationCannotDeleteLearnerHistory()
+    {
+        var unit = new Unit();
+        _repository.Setup(repository => repository.FindAsync<Unit>(unit.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(unit);
+        _repository.Setup(repository => repository.HasDependentsAsync<Unit>(unit.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _repository.Setup(repository => repository.UnitHasLearningHistoryAsync(unit.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        await Assert.ThrowsAsync<ConflictException>(() => _service.DeleteUnitAsync(unit.Id, true, default));
+        _repository.Verify(repository => repository.Remove(It.IsAny<Unit>()), Times.Never);
+    }
 }

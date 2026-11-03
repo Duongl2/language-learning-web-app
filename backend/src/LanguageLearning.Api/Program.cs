@@ -84,6 +84,7 @@ builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserProfileService, UserProfileService>();
 builder.Services.AddScoped<AdminContentService>();
+builder.Services.AddScoped<PublishedContentService>();
 builder.Services.AddScoped<IDeckService, DeckService>();
 builder.Services.AddScoped<ICardService, CardService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();

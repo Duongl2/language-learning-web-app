@@ -10,5 +10,6 @@ public interface IAdminContentRepository
     Task AddAsync<T>(T entity, CancellationToken cancellationToken = default) where T : BaseEntity;
     void Remove<T>(T entity) where T : BaseEntity;
     Task<bool> HasDependentsAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : BaseEntity;
+    Task<bool> UnitHasLearningHistoryAsync(Guid id, CancellationToken cancellationToken = default);
     Task SaveAsync(CancellationToken cancellationToken = default);
 }

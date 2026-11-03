@@ -92,3 +92,12 @@ export interface SyncOperation {
   occurredAt: string;
   status: 'Pending' | 'Synced' | 'Failed';
 }
+
+export interface OfflineCardSchedule {
+  cardId: string;
+  deckId: string;
+  dueAt: string;
+  stateJson: string;
+  algorithmVersion: string;
+  lastReviewedAt: string | null;
+}

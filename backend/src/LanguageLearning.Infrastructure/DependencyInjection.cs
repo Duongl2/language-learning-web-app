@@ -37,6 +37,7 @@ public static class DependencyInjection
         services.AddScoped<IReviewRepository, ReviewRepository>();
         services.AddScoped<ILanguageRepository, LanguageRepository>();
         services.AddScoped<IAdminContentRepository, AdminContentRepository>();
+        services.AddScoped<IPublishedContentRepository, PublishedContentRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddSingleton<IPasswordHashService, Pbkdf2PasswordHashService>();
         services.AddSingleton<ITokenService, JwtTokenService>();

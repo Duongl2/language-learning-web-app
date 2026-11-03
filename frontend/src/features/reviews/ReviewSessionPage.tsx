@@ -2,8 +2,9 @@
 import { useState } from 'react';
 import { Flashcard } from '../flashcards/components/Flashcard';
 import { useDueCards } from './hooks/useDueCards';
+import { queueOfflineReview } from '../../offline/queueOfflineReview';
 
-type ReviewRating = 'again' | 'hard' | 'good' | 'easy';
+import type { SrsRating } from '../../types';
 
 function formatReviewInterval(minutes: number): string {
   if (!Number.isFinite(minutes) || minutes <= 0) {
@@ -32,20 +33,32 @@ export function ReviewSessionPage({
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
-  const [ratings, setRatings] = useState<ReviewRating[]>([]);
+  const [ratings, setRatings] = useState<SrsRating[]>([]);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
-  const handleRating = (rating: ReviewRating) => {
+  const handleRating = async (
+    rating: SrsRating,
+    cardId: string
+  ) => {
     if (!isFlipped || isTransitioning) return;
 
     setIsTransitioning(true);
+    setSaveError('');
 
-    window.setTimeout(() => {
-        setRatings((previous) => [...previous, rating]);
-        setCurrentIndex((previous) => previous + 1);
-        setIsFlipped(false);
-        setIsTransitioning(false);
-    }, 200);
+    try {
+      await queueOfflineReview(deckId, cardId, rating, currentCard.algorithmVersion);
+
+      setRatings((previous) => [...previous, rating]);
+      setCurrentIndex((previous) => previous + 1);
+      setIsFlipped(false);
+    } catch {
+      setSaveError(
+        'Không thể lưu kết quả ôn tập. Vui lòng thử lại.'
+      );
+    } finally {
+      setIsTransitioning(false);
+    }
   };
 
   if (isLoading) {
@@ -77,6 +90,7 @@ export function ReviewSessionPage({
         <h1 className="mb-3 text-2xl font-bold text-stone-900">
           Không có thẻ cần ôn tập
         </h1>
+
         <p className="text-stone-500">
           Hiện tại bạn đã hoàn thành tất cả thẻ đến hạn.
         </p>
@@ -99,7 +113,8 @@ export function ReviewSessionPage({
           </p>
 
           <p className="mt-3 text-sm text-stone-500">
-            Các đánh giá hiện chỉ được lưu tạm trong phiên này.
+            Kết quả ôn tập đã được lưu trên thiết bị
+            và đang chờ đồng bộ.
           </p>
         </div>
       </main>
@@ -108,6 +123,7 @@ export function ReviewSessionPage({
 
   const progress = (currentIndex / totalCards) * 100;
   const intervals = currentCard.intervals;
+
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
       <div className="mb-8 text-center">
@@ -152,19 +168,19 @@ export function ReviewSessionPage({
 
       <div
         className={`transition-opacity duration-200 ease-in-out ${
-            isTransitioning ? 'opacity-0' : 'opacity-100'
+          isTransitioning ? 'opacity-50' : 'opacity-100'
         }`}
-        >
+      >
         <Flashcard
-            key={currentCard.cardId}
-            front={currentCard.front}
-            back={currentCard.back}
-            isFlipped={isFlipped}
-            onFlip={() => {
+          key={currentCard.cardId}
+          front={currentCard.front}
+          back={currentCard.back}
+          isFlipped={isFlipped}
+          onFlip={() => {
             if (!isTransitioning) {
-                setIsFlipped((previous) => !previous);
+              setIsFlipped((previous) => !previous);
             }
-            }}
+          }}
         />
       </div>
 
@@ -174,68 +190,93 @@ export function ReviewSessionPage({
             <p className="mb-4 text-center text-sm font-medium text-stone-600">
               Bạn ghi nhớ thẻ này ở mức độ nào?
             </p>
-          
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <button
-            type="button"
-            onClick={() => handleRating('again')}
-            disabled={isTransitioning}
-            className="rounded-xl bg-red-500 px-4 py-3 text-white transition-colors hover:bg-red-600 disabled:opacity-60"
-        >
-            <span className="block font-semibold">Again</span>
-            <span className="mt-1 block text-xs">
-            {intervals
-                ? formatReviewInterval(intervals.againMinutes)
-                : 'Chưa có dự kiến'}
-            </span>
-        </button>
 
-        <button
-            type="button"
-            onClick={() => handleRating('hard')}
-            disabled={isTransitioning}
-            className="rounded-xl bg-orange-500 px-4 py-3 text-white transition-colors hover:bg-orange-600 disabled:opacity-60"
-        >
-            <span className="block font-semibold">Hard</span>
-            <span className="mt-1 block text-xs">
-            {intervals
-                ? formatReviewInterval(intervals.hardMinutes)
-                : 'Chưa có dự kiến'}
-            </span>
-        </button>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <button
+                type="button"
+                onClick={() =>
+                  handleRating('Again', currentCard.cardId)
+                }
+                disabled={isTransitioning}
+                className="rounded-xl bg-red-500 px-4 py-3 text-white transition-colors hover:bg-red-600 disabled:opacity-60"
+              >
+                <span className="block font-semibold">
+                  Again
+                </span>
+                <span className="mt-1 block text-xs">
+                  {intervals
+                    ? formatReviewInterval(intervals.againMinutes)
+                    : 'Chưa có dự kiến'}
+                </span>
+              </button>
 
-        <button
-            type="button"
-            onClick={() => handleRating('good')}
-            disabled={isTransitioning}
-            className="rounded-xl bg-green-600 px-4 py-3 text-white transition-colors hover:bg-green-700 disabled:opacity-60"
-        >
-            <span className="block font-semibold">Good</span>
-            <span className="mt-1 block text-xs">
-            {intervals
-                ? formatReviewInterval(intervals.goodMinutes)
-                : 'Chưa có dự kiến'}
-            </span>
-        </button>
+              <button
+                type="button"
+                onClick={() =>
+                  handleRating('Hard', currentCard.cardId)
+                }
+                disabled={isTransitioning}
+                className="rounded-xl bg-orange-500 px-4 py-3 text-white transition-colors hover:bg-orange-600 disabled:opacity-60"
+              >
+                <span className="block font-semibold">
+                  Hard
+                </span>
+                <span className="mt-1 block text-xs">
+                  {intervals
+                    ? formatReviewInterval(intervals.hardMinutes)
+                    : 'Chưa có dự kiến'}
+                </span>
+              </button>
 
-        <button
-            type="button"
-            onClick={() => handleRating('easy')}
-            disabled={isTransitioning}
-            className="rounded-xl bg-blue-500 px-4 py-3 text-white transition-colors hover:bg-blue-600 disabled:opacity-60"
-        >
-            <span className="block font-semibold">Easy</span>
-            <span className="mt-1 block text-xs">
-            {intervals
-                ? formatReviewInterval(intervals.easyMinutes)
-                : 'Chưa có dự kiến'}
-            </span>
-        </button>
-      </div>
+              <button
+                type="button"
+                onClick={() =>
+                  handleRating('Good', currentCard.cardId)
+                }
+                disabled={isTransitioning}
+                className="rounded-xl bg-green-600 px-4 py-3 text-white transition-colors hover:bg-green-700 disabled:opacity-60"
+              >
+                <span className="block font-semibold">
+                  Good
+                </span>
+                <span className="mt-1 block text-xs">
+                  {intervals
+                    ? formatReviewInterval(intervals.goodMinutes)
+                    : 'Chưa có dự kiến'}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  handleRating('Easy', currentCard.cardId)
+                }
+                disabled={isTransitioning}
+                className="rounded-xl bg-blue-500 px-4 py-3 text-white transition-colors hover:bg-blue-600 disabled:opacity-60"
+              >
+                <span className="block font-semibold">
+                  Easy
+                </span>
+                <span className="mt-1 block text-xs">
+                  {intervals
+                    ? formatReviewInterval(intervals.easyMinutes)
+                    : 'Chưa có dự kiến'}
+                </span>
+              </button>
+            </div>
           </div>
         ) : (
           <p className="text-center text-sm text-stone-500">
             Nhấn vào thẻ để xem đáp án.
+          </p>
+        )}
+
+        {saveError && (
+          <p
+            role="alert"
+            className="mt-3 text-center text-sm text-red-600"
+          >
+            {saveError}
           </p>
         )}
       </div>
