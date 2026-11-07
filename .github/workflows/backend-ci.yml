@@ -71,6 +71,8 @@ jobs:
             --connection "$ISSUE27_TEST_CONNECTION"
 
       - name: Run unit and integration tests
+        env:
+          ISSUE50_TEST_CONNECTION: ${{ env.ISSUE27_TEST_CONNECTION }}
         run: |
           dotnet test backend/LanguageLearning.sln \
             --configuration Release \

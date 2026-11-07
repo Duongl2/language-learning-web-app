@@ -36,8 +36,7 @@ public class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
-        modelBuilder.Entity<Deck>().Property(deck => deck.Version).IsConcurrencyToken();
+        modelBuilder.Entity<Card>().Property(card => card.Version).IsConcurrencyToken();
         modelBuilder.Entity<User>().ToTable("users");
         modelBuilder.Entity<RefreshToken>().ToTable("refresh_tokens");
         modelBuilder.Entity<Language>().ToTable("languages");
