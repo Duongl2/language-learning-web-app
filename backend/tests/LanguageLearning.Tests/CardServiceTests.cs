@@ -199,8 +199,9 @@ public async Task UpdateCard_EmptyFrontOrBack_ThrowsArgumentException(
 
     var request = new UpdateCardRequest
     {
-        Front = front,
-        Back = back
+    BaseVersion = 1,
+    Front = front,
+    Back = back
     };
 
     await Assert.ThrowsAsync<ArgumentException>(
@@ -265,6 +266,7 @@ public async Task UpdateCard_ValidData_UpdatesSuccessfully()
 
     var request = new UpdateCardRequest
     {
+        BaseVersion = 1,
         Front = "  New Front  ",
         Back = "  New Back  "
     };

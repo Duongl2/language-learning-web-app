@@ -42,3 +42,42 @@ Các endpoint danh sách sử dụng Query params:
   "hasPreviousPage": false
 }
 ```
+
+## 6. Cập nhật Flashcard và kiểm soát phiên bản
+
+### Endpoint
+
+`PATCH /api/v1/decks/{deckId}/cards/{cardId}`
+
+Yêu cầu đăng nhập và quyền sở hữu Deck.
+
+### Request Body
+
+```json
+{
+  "baseVersion": 1,
+  "front": "Hello",
+  "back": "Xin chào"
+}
+```
+
+- `baseVersion`: Bắt buộc, là số nguyên từ 1 trở lên.
+- `front`: Nội dung mặt trước, tùy chọn.
+- `back`: Nội dung mặt sau, tùy chọn.
+
+Client phải lấy `version` hiện tại từ thông tin Flashcard và gửi lại dưới tên `baseVersion` khi cập nhật.
+
+### HTTP Response
+
+| Status | Ý nghĩa |
+|---|---|
+| 200 OK | Cập nhật thành công, trả về Flashcard với version mới |
+| 400 Bad Request | Thiếu hoặc không hợp lệ `baseVersion` |
+| 404 Not Found | Flashcard hoặc Deck không tồn tại hoặc không có quyền truy cập |
+| 409 Conflict | `baseVersion` không khớp với phiên bản hiện tại trên Server |
+
+### Xử lý xung đột
+
+Khi nhận HTTP 409, Client không được tự động ghi đè dữ liệu mới hơn.
+
+Frontend Flashcard Editor (Issue #23) cần tải lại Flashcard mới nhất, thông báo xung đột và cho người dùng quyết định cách chỉnh sửa tiếp.

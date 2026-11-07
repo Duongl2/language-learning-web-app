@@ -40,6 +40,7 @@ export interface CreateDeckRequest {
 }
 
 export interface UpdateDeckRequest {
+  baseVersion: number;
   title?: string;
   description?: string;
   languageId?: string;

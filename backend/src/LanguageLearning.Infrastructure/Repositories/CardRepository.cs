@@ -1,3 +1,4 @@
+
 using LanguageLearning.Application.Common.Exceptions;
 using LanguageLearning.Application.Interfaces;
 using LanguageLearning.Domain.Entities;
@@ -74,6 +75,11 @@ public class CardRepository : ICardRepository
         {
             await _context.SaveChangesAsync(cancellationToken);
         }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw new ConflictException(
+                "Card was modified by another device. Refresh and retry.");
+        }
         catch (DbUpdateException ex) when (
             ex.InnerException is MySqlConnector.MySqlException mysqlException &&
             mysqlException.Number == 1451 &&
@@ -85,5 +91,4 @@ public class CardRepository : ICardRepository
                 "Không thể xóa Flashcard đã có lịch sử ôn tập.");
         }
     }
-
 }

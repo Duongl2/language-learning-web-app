@@ -36,8 +36,7 @@ public class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
-        // Quy ước bảng số nhiều snake_case
+        modelBuilder.Entity<Card>().Property(card => card.Version).IsConcurrencyToken();
         modelBuilder.Entity<User>().ToTable("users");
         modelBuilder.Entity<RefreshToken>().ToTable("refresh_tokens");
         modelBuilder.Entity<Language>().ToTable("languages");
@@ -61,7 +60,6 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<SyncOperation>().ToTable("sync_operations");
         modelBuilder.Entity<AuditLog>().ToTable("audit_logs");
 
-        // Unique constraints
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Email)
             .IsUnique();
@@ -94,7 +92,6 @@ public class AppDbContext : DbContext
             .HasIndex(so => new { so.UserId, so.ClientOperationId })
             .IsUnique();
 
-        // Foreign keys & Delete behaviors để tránh multiple cascade paths
         modelBuilder.Entity<CardSchedule>()
             .HasOne(cs => cs.User)
             .WithMany(u => u.CardSchedules)

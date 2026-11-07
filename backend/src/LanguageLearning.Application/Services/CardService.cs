@@ -26,7 +26,8 @@ public class CardService : ICardService
         Guid deckId,
         CancellationToken cancellationToken = default)
     {
-        await GetAccessibleDeckAsync(deckId, false, cancellationToken);
+        await GetAccessibleDeckAsync(
+            deckId, false, cancellationToken);
 
         var cards = await _cardRepository.GetByDeckIdAsync(
             deckId, cancellationToken);
@@ -39,7 +40,8 @@ public class CardService : ICardService
         Guid cardId,
         CancellationToken cancellationToken = default)
     {
-        await GetAccessibleDeckAsync(deckId, false, cancellationToken);
+        await GetAccessibleDeckAsync(
+            deckId, false, cancellationToken);
 
         var card = await GetRequiredCardAsync(
             deckId, cardId, cancellationToken);
@@ -54,13 +56,20 @@ public class CardService : ICardService
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        await GetAccessibleDeckAsync(deckId, true, cancellationToken);
+        await GetAccessibleDeckAsync(
+            deckId, true, cancellationToken);
 
         if (string.IsNullOrWhiteSpace(request.Front))
-            throw new ArgumentException("Card front is required.");
+        {
+            throw new ArgumentException(
+                "Card front is required.");
+        }
 
         if (string.IsNullOrWhiteSpace(request.Back))
-            throw new ArgumentException("Card back is required.");
+        {
+            throw new ArgumentException(
+                "Card back is required.");
+        }
 
         var card = new Card
         {
@@ -71,8 +80,11 @@ public class CardService : ICardService
             Version = 1
         };
 
-        await _cardRepository.AddAsync(card, cancellationToken);
-        await _cardRepository.SaveChangesAsync(cancellationToken);
+        await _cardRepository.AddAsync(
+            card, cancellationToken);
+
+        await _cardRepository.SaveChangesAsync(
+            cancellationToken);
 
         return ToResponse(card);
     }
@@ -85,16 +97,31 @@ public class CardService : ICardService
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        await GetAccessibleDeckAsync(deckId, true, cancellationToken);
+        await GetAccessibleDeckAsync(
+            deckId, true, cancellationToken);
 
         var card = await GetRequiredCardAsync(
             deckId, cardId, cancellationToken);
 
+        if (!request.BaseVersion.HasValue)
+        {
+            throw new ArgumentException(
+                "BaseVersion is required.");
+        }
+
+        if (request.BaseVersion.Value != card.Version)
+        {
+            throw new ConflictException(
+                $"Card version conflict. Client version: {request.BaseVersion.Value}, Server version: {card.Version}.");
+        }
+
         if (request.Front != null)
         {
             if (string.IsNullOrWhiteSpace(request.Front))
+            {
                 throw new ArgumentException(
                     "Card front cannot be empty.");
+            }
 
             card.Front = request.Front.Trim();
         }
@@ -102,15 +129,18 @@ public class CardService : ICardService
         if (request.Back != null)
         {
             if (string.IsNullOrWhiteSpace(request.Back))
+            {
                 throw new ArgumentException(
                     "Card back cannot be empty.");
+            }
 
             card.Back = request.Back.Trim();
         }
 
         card.Version++;
 
-        await _cardRepository.SaveChangesAsync(cancellationToken);
+        await _cardRepository.SaveChangesAsync(
+            cancellationToken);
 
         return ToResponse(card);
     }
@@ -120,13 +150,15 @@ public class CardService : ICardService
         Guid cardId,
         CancellationToken cancellationToken = default)
     {
-        await GetAccessibleDeckAsync(deckId, true, cancellationToken);
+        await GetAccessibleDeckAsync(
+            deckId, true, cancellationToken);
 
         var card = await GetRequiredCardAsync(
             deckId, cardId, cancellationToken);
 
-        var hasReviewEvents = await _cardRepository.HasReviewEventsAsync(
-            cardId, cancellationToken);
+        var hasReviewEvents =
+            await _cardRepository.HasReviewEventsAsync(
+                cardId, cancellationToken);
 
         if (hasReviewEvents)
         {
@@ -136,7 +168,8 @@ public class CardService : ICardService
 
         _cardRepository.Delete(card);
 
-        await _cardRepository.SaveChangesAsync(cancellationToken);
+        await _cardRepository.SaveChangesAsync(
+            cancellationToken);
     }
 
     private async Task<Deck> GetAccessibleDeckAsync(

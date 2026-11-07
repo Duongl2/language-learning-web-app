@@ -9,12 +9,19 @@ import type {
   OfflineCardSchedule,
 } from '../types';
 
+export interface SyncCursor {
+  userId: string;
+  cursor: string | null;
+  lastSyncedAt: string | null;
+}
+
 export class AppIndexedDb extends Dexie {
   decks!: Table<Deck, string>;
   cards!: Table<Flashcard, string>;
   offlineReviews!: Table<ReviewEvent, string>;
   syncQueue!: Table<SyncOperation, string>;
   cardSchedules!: Table<OfflineCardSchedule, string>;
+  syncCursors!: Table<SyncCursor, string>;
 
   constructor() {
     super('LanguageLearningOfflineDb');
@@ -28,6 +35,10 @@ export class AppIndexedDb extends Dexie {
 
     this.version(2).stores({
       cardSchedules: 'cardId, deckId, dueAt',
+    });
+
+    this.version(3).stores({
+      syncCursors: 'userId',
     });
   }
 }
