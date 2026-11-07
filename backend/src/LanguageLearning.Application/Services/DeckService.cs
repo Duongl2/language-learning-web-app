@@ -1,9 +1,10 @@
 
+using LanguageLearning.Application.Common;
+using LanguageLearning.Application.Common.Exceptions;
 using LanguageLearning.Application.DTOs.Decks;
 using LanguageLearning.Application.Interfaces;
 using LanguageLearning.Domain.Entities;
-using LanguageLearning.Application.Common;
-using LanguageLearning.Application.Common.Exceptions;
+
 namespace LanguageLearning.Application.Services;
 
 public class DeckService : IDeckService
@@ -33,7 +34,10 @@ public class DeckService : IDeckService
         }
 
         if (string.IsNullOrWhiteSpace(request.Title))
-            throw new ArgumentException("Deck title is required.");
+        {
+            throw new ArgumentException(
+                "Deck title is required.");
+        }
 
         var deck = new Deck
         {
@@ -51,10 +55,14 @@ public class DeckService : IDeckService
             var normalizedTag = tag?.Trim();
 
             if (string.IsNullOrWhiteSpace(normalizedTag))
+            {
                 continue;
+            }
 
             if (deck.Tags.Any(t => t.Tag == normalizedTag))
+            {
                 continue;
+            }
 
             deck.Tags.Add(new DeckTag
             {
@@ -98,13 +106,13 @@ public class DeckService : IDeckService
         ArgumentNullException.ThrowIfNull(pagination);
 
         var (decks, totalItems) =
-        await _deckRepository.GetAccessibleDecksAsync(
-            userId,
-            pagination.Page,
-            pagination.PageSize,
-            onlyMine,
-            cancellationToken,
-            search);
+            await _deckRepository.GetAccessibleDecksAsync(
+                userId,
+                pagination.Page,
+                pagination.PageSize,
+                onlyMine,
+                cancellationToken,
+                search);
 
         var deckIds = decks
             .Select(deck => deck.Id)
@@ -161,7 +169,8 @@ public class DeckService : IDeckService
         var deck = await _deckRepository.GetByIdAsync(
             deckId, cancellationToken);
 
-        if (deck == null || (deck.OwnerId != userId && !deck.IsPublic))
+        if (deck == null ||
+            (deck.OwnerId != userId && !deck.IsPublic))
         {
             throw new NotFoundException(
                 "The requested deck does not exist or is not accessible.");
@@ -197,6 +206,8 @@ public class DeckService : IDeckService
         UpdateDeckRequest request,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         var userId = _currentUserService.GetRequiredUserId();
 
         var deck = await _deckRepository.GetByIdAsync(
@@ -208,17 +219,33 @@ public class DeckService : IDeckService
                 "The requested deck does not exist or is not accessible.");
         }
 
+        if (!request.BaseVersion.HasValue)
+        {
+            throw new ArgumentException(
+                "BaseVersion is required.");
+        }
+
+        if (request.BaseVersion.Value != deck.Version)
+        {
+            throw new ConflictException(
+                $"Deck version conflict. Client version: {request.BaseVersion.Value}, Server version: {deck.Version}.");
+        }
+
         if (request.Title != null)
         {
             if (string.IsNullOrWhiteSpace(request.Title))
+            {
                 throw new ArgumentException(
                     "Deck title cannot be empty.");
+            }
 
             deck.Title = request.Title.Trim();
         }
 
         if (request.Description != null)
+        {
             deck.Description = request.Description.Trim();
+        }
 
         if (request.LanguageId.HasValue)
         {
@@ -235,7 +262,9 @@ public class DeckService : IDeckService
         }
 
         if (request.IsPublic.HasValue)
+        {
             deck.IsPublic = request.IsPublic.Value;
+        }
 
         if (request.Tags != null)
         {
@@ -257,7 +286,9 @@ public class DeckService : IDeckService
             foreach (var tag in newTags)
             {
                 if (deck.Tags.Any(t => t.Tag == tag))
+                {
                     continue;
+                }
 
                 deck.Tags.Add(new DeckTag
                 {

@@ -63,6 +63,7 @@ public class DeckServiceTests
 
         var request = new UpdateDeckRequest
         {
+            BaseVersion = 1,
             Title = "New Title"
         };
 
@@ -114,6 +115,7 @@ public class DeckServiceTests
 
         var request = new UpdateDeckRequest
         {
+            BaseVersion = 1,
             Title = "Unauthorized Change"
         };
 
@@ -124,6 +126,93 @@ public class DeckServiceTests
 
         Assert.Equal("Owner Deck", deck.Title);
         Assert.Equal(1, deck.Version);
+
+        repositoryMock.Verify(
+            repo => repo.SaveChangesAsync(
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdateDeck_MissingBaseVersion_ThrowsArgumentException()
+    {
+        var ownerId = Guid.NewGuid();
+        var deckId = Guid.NewGuid();
+
+        var deck = new Deck
+        {
+            Id = deckId,
+            OwnerId = ownerId,
+            LanguageId = Guid.NewGuid(),
+            Title = "Original Title",
+            Version = 1
+        };
+
+        var repositoryMock = new Mock<IDeckRepository>();
+
+        repositoryMock
+            .Setup(repo => repo.GetByIdAsync(
+                deckId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(deck);
+
+        var service = CreateService(repositoryMock, ownerId);
+
+        var request = new UpdateDeckRequest
+        {
+            Title = "Changed Title"
+        };
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => service.UpdateDeckAsync(deckId, request));
+
+        Assert.Contains("BaseVersion", exception.Message);
+        Assert.Equal("Original Title", deck.Title);
+        Assert.Equal(1, deck.Version);
+
+        repositoryMock.Verify(
+            repo => repo.SaveChangesAsync(
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdateDeck_StaleBaseVersion_ThrowsConflict_TC17()
+    {
+        var ownerId = Guid.NewGuid();
+        var deckId = Guid.NewGuid();
+
+        var deck = new Deck
+        {
+            Id = deckId,
+            OwnerId = ownerId,
+            LanguageId = Guid.NewGuid(),
+            Title = "Device A Updated",
+            Version = 2
+        };
+
+        var repositoryMock = new Mock<IDeckRepository>();
+
+        repositoryMock
+            .Setup(repo => repo.GetByIdAsync(
+                deckId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(deck);
+
+        var service = CreateService(repositoryMock, ownerId);
+
+        var request = new UpdateDeckRequest
+        {
+            BaseVersion = 1,
+            Title = "Device B Updated"
+        };
+
+        var exception = await Assert.ThrowsAsync<ConflictException>(
+            () => service.UpdateDeckAsync(deckId, request));
+
+        Assert.Contains("Deck version conflict", exception.Message);
+        Assert.Equal("Device A Updated", deck.Title);
+        Assert.Equal(2, deck.Version);
 
         repositoryMock.Verify(
             repo => repo.SaveChangesAsync(
@@ -284,7 +373,8 @@ public class DeckServiceTests
             Id = deckId,
             OwnerId = ownerId,
             LanguageId = Guid.NewGuid(),
-            Title = "English Deck"
+            Title = "English Deck",
+            Version = 1
         };
 
         deck.Tags.Add(new DeckTag
@@ -320,6 +410,7 @@ public class DeckServiceTests
 
         var request = new UpdateDeckRequest
         {
+            BaseVersion = 1,
             Tags = new List<string>
             {
                 "English",
@@ -563,78 +654,76 @@ public class DeckServiceTests
             Times.Never);
     }
 
-[Fact]
-public async Task GetDecks_OnlyMineTrue_PassesFilterToRepository()
-{
-    var userId = Guid.NewGuid();
-    var deckId = Guid.NewGuid();
-
-    var deck = new Deck
+    [Fact]
+    public async Task GetDecks_OnlyMineTrue_PassesFilterToRepository()
     {
-        Id = deckId,
-        OwnerId = userId,
-        LanguageId = Guid.NewGuid(),
-        Title = "My English Deck",
-        IsPublic = false
-    };
+        var userId = Guid.NewGuid();
+        var deckId = Guid.NewGuid();
 
-    var repositoryMock = new Mock<IDeckRepository>();
+        var deck = new Deck
+        {
+            Id = deckId,
+            OwnerId = userId,
+            LanguageId = Guid.NewGuid(),
+            Title = "My English Deck",
+            IsPublic = false
+        };
 
+        var repositoryMock = new Mock<IDeckRepository>();
 
-    repositoryMock
-        .Setup(repo => repo.GetAccessibleDecksAsync(
-            userId,
-            1,
-            10,
-            true,
-            It.IsAny<CancellationToken>(),
-            null))
-        .ReturnsAsync((
-            new List<Deck> { deck },
-            1));
+        repositoryMock
+            .Setup(repo => repo.GetAccessibleDecksAsync(
+                userId,
+                1,
+                10,
+                true,
+                It.IsAny<CancellationToken>(),
+                null))
+            .ReturnsAsync((
+                new List<Deck> { deck },
+                1));
 
-    repositoryMock
-        .Setup(repo => repo.GetDeckStatisticsBatchAsync(
-            It.IsAny<IReadOnlyCollection<Guid>>(),
-            userId,
-            It.IsAny<CancellationToken>()))
-        .ReturnsAsync(
-            new Dictionary<Guid,
-                (int TotalCards, int NewCards, int DueCards)>
-            {
-                [deckId] = (20, 5, 8)
-            });
+        repositoryMock
+            .Setup(repo => repo.GetDeckStatisticsBatchAsync(
+                It.IsAny<IReadOnlyCollection<Guid>>(),
+                userId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                new Dictionary<Guid,
+                    (int TotalCards, int NewCards, int DueCards)>
+                {
+                    [deckId] = (20, 5, 8)
+                });
 
-    var service = CreateService(
-        repositoryMock,
-        userId);
+        var service = CreateService(
+            repositoryMock,
+            userId);
 
-    var pagination = new PaginationParams
-    {
-        Page = 1,
-        PageSize = 10
-    };
+        var pagination = new PaginationParams
+        {
+            Page = 1,
+            PageSize = 10
+        };
 
-    var result = await service.GetDecksAsync(
-        pagination,
-        onlyMine: true);
+        var result = await service.GetDecksAsync(
+            pagination,
+            onlyMine: true);
 
-    Assert.Single(result.Items);
-    Assert.Equal(deckId, result.Items[0].Id);
-    Assert.Equal(userId, result.Items[0].OwnerId);
-    Assert.Equal(1, result.TotalItems);
-    Assert.Equal(1, result.TotalPages);
-    Assert.Equal(8, result.Items[0].DueCards);
+        Assert.Single(result.Items);
+        Assert.Equal(deckId, result.Items[0].Id);
+        Assert.Equal(userId, result.Items[0].OwnerId);
+        Assert.Equal(1, result.TotalItems);
+        Assert.Equal(1, result.TotalPages);
+        Assert.Equal(8, result.Items[0].DueCards);
 
-    repositoryMock.Verify(
-        repo => repo.GetAccessibleDecksAsync(
-            userId,
-            1,
-            10,
-            true,
-            It.IsAny<CancellationToken>(),
-            null),
-        Times.Once);
-}
-
+        repositoryMock.Verify(
+            repo => repo.GetAccessibleDecksAsync(
+                userId,
+                1,
+                10,
+                true,
+                It.IsAny<CancellationToken>(),
+                null),
+            Times.Once);
+    }
 }

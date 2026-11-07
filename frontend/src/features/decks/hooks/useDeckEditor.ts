@@ -13,6 +13,7 @@ import type {
 
 export function useDeckEditor() {
   const [isOpen, setIsOpen] = useState(false);
+
   const [editingDeck, setEditingDeck] =
     useState<DeckResponse | null>(null);
 
@@ -38,7 +39,10 @@ export function useDeckEditor() {
     if (editingDeck) {
       await updateMutation.mutateAsync({
         id: editingDeck.id,
-        request,
+        request: {
+          ...request,
+          baseVersion: editingDeck.version,
+        },
       });
     } else {
       await createMutation.mutateAsync(request);

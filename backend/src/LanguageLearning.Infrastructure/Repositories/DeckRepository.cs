@@ -1,4 +1,4 @@
-
+using LanguageLearning.Application.Common.Exceptions;
 using LanguageLearning.Application.Interfaces;
 using LanguageLearning.Domain.Entities;
 using LanguageLearning.Infrastructure.Data;
@@ -124,7 +124,15 @@ public class DeckRepository : IDeckRepository
     public async Task SaveChangesAsync(
         CancellationToken cancellationToken = default)
     {
-        await _context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw new ConflictException(
+                "Deck was modified by another device. Refresh and retry.");
+        }
     }
 
     public async Task<Dictionary<Guid, (int TotalCards, int NewCards, int DueCards)>>

@@ -12,10 +12,14 @@ namespace LanguageLearning.Api.Controllers;
 public sealed class SyncController : ControllerBase
 {
     private readonly ISyncService _syncService;
+    private readonly ISyncPullService _syncPullService;
 
-    public SyncController(ISyncService syncService)
+    public SyncController(
+        ISyncService syncService,
+        ISyncPullService syncPullService)
     {
         _syncService = syncService;
+        _syncPullService = syncPullService;
     }
 
     [HttpPost("push")]
@@ -25,6 +29,20 @@ public sealed class SyncController : ControllerBase
     {
         var result = await _syncService.PushAsync(
             request,
+            cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpGet("pull")]
+    public async Task<ActionResult<SyncPullResponse>> Pull(
+        [FromQuery] string? cursor,
+        [FromQuery] int limit = 50,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _syncPullService.PullAsync(
+            cursor,
+            limit,
             cancellationToken);
 
         return Ok(result);
