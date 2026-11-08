@@ -1,5 +1,6 @@
 ﻿
 using LanguageLearning.Application.Interfaces;
+using LanguageLearning.Application.Services;
 using LanguageLearning.Infrastructure.Data;
 using LanguageLearning.Infrastructure.Repositories;
 using LanguageLearning.Infrastructure.Security;
@@ -41,6 +42,9 @@ public static class DependencyInjection
         services.AddScoped<IAdminContentRepository, AdminContentRepository>();
         services.AddScoped<IPublishedContentRepository, PublishedContentRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IStreakRepository, StreakRepository>();
+        services.AddScoped<StreakService>();
+        services.AddSingleton(TimeProvider.System);
         services.AddSingleton<IPasswordHashService, Pbkdf2PasswordHashService>();
         services.AddSingleton<ITokenService, JwtTokenService>();
         return services;
