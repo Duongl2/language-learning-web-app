@@ -13,6 +13,7 @@ export function LessonPage() {
         {lesson.isPending && <p role="status" className="mt-6">Đang tải bài học...</p>}
         {lesson.isError && <p role="alert" className="mt-6 text-red-700">Không tải được bài học: {lesson.error.message}</p>}
         {lesson.data && <article className="mt-6"><h1 className="text-3xl font-extrabold">{lesson.data.title}</h1><div className="mt-5 whitespace-pre-wrap text-base leading-7 text-stone-700">{lesson.data.content || 'Nội dung bài học đang được cập nhật.'}</div></article>}
+        {lesson.data && <Link to={`/lessons/${lessonId}/quiz`} className="mt-6 inline-block rounded bg-rose-700 px-4 py-3 font-bold text-white">Làm Quiz</Link>}
       </div>
     </main>
   );

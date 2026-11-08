@@ -18,6 +18,7 @@ import { ProfilePage } from './features/profile/ProfilePage.tsx';
 import { CourseCatalogPage, CourseDetailPage, LessonPage } from './features/courses/courseRoutes.tsx';
 import { ReviewSessionPage } from './features/reviews/ReviewSessionPage.tsx';
 import './index.css';
+import { learningRoutes } from './features/learning/LearningNavigation';
 
 
 const queryClient = new QueryClient({
@@ -47,6 +48,7 @@ createRoot(document.getElementById('root')!).render(
         <AuthProvider>
           <Suspense fallback={<div className="graph-paper min-h-screen p-8 text-stone-600">Đang tải trang...</div>}>
           <Routes>
+            {Object.values(learningRoutes).map(route => <Route key={route.path} path={route.path} element={<ProtectedRoute><route.default /></ProtectedRoute>} />)}
             <Route
               path="/login"
               element={<AuthPage mode="login" />}
