@@ -117,6 +117,8 @@ export function DeckCard({
             Ôn tập
           </Link>
 
+          <Link to={`/decks/${deck.id}/csv/import`} className="rounded border px-3 py-2 text-xs font-bold text-rose-700">Nhập / xuất CSV</Link>
+
           <button
             type="button"
             onClick={() => onEdit(deck)}
