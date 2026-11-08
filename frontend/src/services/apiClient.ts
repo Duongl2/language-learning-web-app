@@ -26,9 +26,10 @@ export class ApiError extends Error {
 
 interface RequestOptions {
   anonymous?: boolean;
+  responseType?: 'json' | 'blob';
 }
 
-async function parseResponse<T>(response: Response): Promise<T> {
+async function parseResponse<T>(response: Response, responseType: 'json' | 'blob' = 'json'): Promise<T> {
   if (!response.ok) {
     const data: unknown = await response.json().catch(() => null);
     const detail =
@@ -43,6 +44,8 @@ async function parseResponse<T>(response: Response): Promise<T> {
   if (response.status === 204) {
     return undefined as T;
   }
+
+  if (responseType === 'blob') return response.blob() as Promise<T>;
 
   return response.json() as Promise<T>;
 }
@@ -133,7 +136,7 @@ export async function apiRequest<T>(
 
   if (response.status === 401 && !requestOptions.anonymous) {
     if (getSessionVersion() !== version) {
-      return parseResponse<T>(response);
+      return parseResponse<T>(response, requestOptions.responseType);
     }
     const refreshed = await refreshSession();
 
@@ -152,5 +155,5 @@ export async function apiRequest<T>(
     clearAuthSession();
   }
 
-  return parseResponse<T>(response);
+  return parseResponse<T>(response, requestOptions.responseType);
 }
