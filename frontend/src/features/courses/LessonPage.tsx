@@ -1,8 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, ArrowRight, BookOpen, List } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 
 import { coursesApi } from './api/coursesApi';
+import { learningApi } from '../learning/api/progressApi';
 
 export function LessonPage() {
   const { lessonId = '' } = useParams<{ lessonId: string }>();
@@ -11,10 +13,29 @@ export function LessonPage() {
     queryFn: () => coursesApi.lessonViewer(lessonId),
     enabled: Boolean(lessonId),
   });
+  const cache = useQueryClient();
+  const update = useMutation({
+    mutationFn: (status: string) => learningApi.updateProgress(lessonId, status),
+    onSuccess: () => {
+      void cache.invalidateQueries({ queryKey: ['learning-progress'] });
+    },
+  });
+  const { mutate: markProgress } = update;
+  useEffect(() => {
+    if (lesson.isSuccess) markProgress('InProgress');
+  }, [lessonId, lesson.isSuccess, markProgress]);
 
   return (
     <main className="graph-paper min-h-screen px-4 py-8 text-stone-900 sm:px-8">
       <div className="mx-auto max-w-4xl">
+        {lesson.data && (
+          <div className="mb-6 flex flex-wrap gap-4">
+            <button disabled={update.isPending} onClick={() => update.mutate('Completed')} className="rounded border-2 px-4 py-3 font-bold">Đánh dấu hoàn thành</button>
+            <Link to="/learning" className="p-3 font-bold">Xem tiến độ</Link>
+          </div>
+        )}
+        {update.isError && <p role="alert">{update.error.message}</p>}
+        {update.isSuccess && update.variables === 'Completed' && <p role="status">Đã lưu hoàn thành bài học.</p>}
         {lesson.isPending && <p role="status" className="rounded-xl bg-white p-6">Đang tải bài học...</p>}
         {lesson.isError && (
           <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-5 text-red-700">
