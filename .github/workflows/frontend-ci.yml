@@ -37,5 +37,14 @@ jobs:
       - name: Type check (TypeScript)
         run: npm run type-check --if-present
 
+      - name: Run component tests
+        run: npm test
+
       - name: Build frontend
         run: npm run build
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run browser tests
+        run: npm run test:e2e
