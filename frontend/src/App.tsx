@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { useAuth } from './features/auth/authContext';
@@ -32,7 +32,7 @@ export function App() {
   const location = useLocation();
   const [currentView, setCurrentView] = useState<
   'flashcard' | 'lessonList' | 'quiz' | 'myDecks'
->(() => new URLSearchParams(location.search).get('view') === 'quiz' ? 'quiz' : 'flashcard');
+>(() => { const view = new URLSearchParams(location.search).get('view'); return view === 'myDecks' ? 'myDecks' : view === 'quiz' ? 'quiz' : 'flashcard'; });
   const [activeTabSub, setActiveTabSub] = useState<'vocab' | 'example'>('vocab');
   const [isFlipped, setIsFlipped] = useState(false);
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
