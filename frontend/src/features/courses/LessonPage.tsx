@@ -1,14 +1,27 @@
-import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 import { coursesApi } from './api/coursesApi';
+import { learningApi } from '../learning/api/progressApi';
 
 export function LessonPage() {
   const { lessonId = '' } = useParams<{ lessonId: string }>();
   const lesson = useQuery({ queryKey: ['lesson', lessonId], queryFn: () => coursesApi.lesson(lessonId), enabled: Boolean(lessonId) });
+  const cache = useQueryClient();
+  const update = useMutation({ mutationFn: (status: string) => learningApi.updateProgress(lessonId, status), onSuccess: () => {
+    void cache.invalidateQueries({ queryKey: ['learning-progress'] });
+  } });
+  const { mutate: markProgress } = update;
+  useEffect(() => {
+    if (lesson.isSuccess) markProgress('InProgress');
+  }, [lessonId, lesson.isSuccess, markProgress]);
 
   return (
     <main className="graph-paper min-h-screen px-4 py-8 text-stone-900 sm:px-8">
       <div className="mx-auto max-w-3xl rounded-2xl border-2 border-stone-900 bg-white p-6 shadow-[5px_5px_0_#262626]">
+        {lesson.data && <div className="mb-6 flex flex-wrap gap-4"><button disabled={update.isPending} onClick={() => update.mutate('Completed')} className="rounded border-2 px-4 py-3 font-bold">Đánh dấu hoàn thành</button><Link to="/learning" className="p-3 font-bold">Xem tiến độ</Link></div>}
+        {update.isError && <p role="alert">{update.error.message}</p>}
+        {update.isSuccess && update.variables === 'Completed' && <p role="status">Đã lưu hoàn thành bài học.</p>}
         <Link to="/courses" className="text-sm font-bold text-rose-700">← Danh mục khóa học</Link>
         {lesson.isPending && <p role="status" className="mt-6">Đang tải bài học...</p>}
         {lesson.isError && <p role="alert" className="mt-6 text-red-700">Không tải được bài học: {lesson.error.message}</p>}
