@@ -1,5 +1,6 @@
 ﻿
 using LanguageLearning.Application.Interfaces;
+using LanguageLearning.Application.Services;
 using LanguageLearning.Infrastructure.Data;
 using LanguageLearning.Infrastructure.Repositories;
 using LanguageLearning.Infrastructure.Security;
@@ -33,6 +34,8 @@ public static class DependencyInjection
         });
 
         services.AddScoped<IDeckRepository, DeckRepository>();
+        services.AddScoped<IQuizReadRepository, QuizReadRepository>();
+        services.AddScoped<QuizReadService>();
         services.AddScoped<ICardRepository, CardRepository>();
         services.AddScoped<IReviewRepository, ReviewRepository>();
         services.AddScoped<ISyncRepository, SyncRepository>();
