@@ -37,6 +37,7 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.Entity<Card>().Property(card => card.Version).IsConcurrencyToken();
+        modelBuilder.Entity<LessonProgress>().Property(progress => progress.Status).IsConcurrencyToken();
         modelBuilder.Entity<User>().ToTable("users");
         modelBuilder.Entity<RefreshToken>().ToTable("refresh_tokens");
         modelBuilder.Entity<Language>().ToTable("languages");
