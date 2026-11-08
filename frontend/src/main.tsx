@@ -17,6 +17,11 @@ import { ProtectedRoute } from './features/auth/ProtectedRoute.tsx';
 import { ProfilePage } from './features/profile/ProfilePage.tsx';
 import { CourseCatalogPage, CourseDetailPage, LessonPage } from './features/courses/courseRoutes.tsx';
 import { ReviewSessionPage } from './features/reviews/ReviewSessionPage.tsx';
+import { QuizPage } from './features/learning/QuizPage';
+import { ProgressPage } from './features/learning/ProgressPage';
+import { StatisticsPage } from './features/learning/StatisticsPage';
+import { CommunityPage } from './features/learning/CommunityPage';
+import { CsvPage } from './features/learning/CsvPage';
 import './index.css';
 
 
@@ -47,6 +52,11 @@ createRoot(document.getElementById('root')!).render(
         <AuthProvider>
           <Suspense fallback={<div className="graph-paper min-h-screen p-8 text-stone-600">Đang tải trang...</div>}>
           <Routes>
+            <Route path="/lessons/:lessonId/quiz" element={<ProtectedRoute><QuizPage /></ProtectedRoute>} />
+            <Route path="/learning" element={<ProtectedRoute><ProgressPage /></ProtectedRoute>} />
+            <Route path="/statistics" element={<ProtectedRoute><StatisticsPage /></ProtectedRoute>} />
+            <Route path="/community" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
+            <Route path="/decks/:deckId/csv" element={<ProtectedRoute><CsvPage /></ProtectedRoute>} />
             <Route
               path="/login"
               element={<AuthPage mode="login" />}

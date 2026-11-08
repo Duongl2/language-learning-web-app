@@ -103,6 +103,7 @@ export function DeckCard({
         </span>
 
         <div className="flex flex-wrap items-center gap-2">
+            <Link to={`/decks/${deck.id}/csv`} className="rounded border px-3 py-2 text-xs font-bold text-rose-700">Nhập / xuất CSV</Link>
             <OfflineDownloadButton
               deckId={deck.id}
               deckTitle={deck.title}

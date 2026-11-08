@@ -1,10 +1,20 @@
-import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 import { coursesApi } from './api/coursesApi';
+import { learningApi } from '../learning/api/learningApi';
 
 export function LessonPage() {
   const { lessonId = '' } = useParams<{ lessonId: string }>();
   const lesson = useQuery({ queryKey: ['lesson', lessonId], queryFn: () => coursesApi.lesson(lessonId), enabled: Boolean(lessonId) });
+  const cache = useQueryClient();
+  const update = useMutation({ mutationFn: (status: string) => learningApi.updateProgress(lessonId, status), onSuccess: () => {
+    void cache.invalidateQueries({ queryKey: ['learning-progress'] });
+  } });
+  const { mutate: markProgress } = update;
+  useEffect(() => {
+    if (lesson.isSuccess) markProgress('InProgress');
+  }, [lessonId, lesson.isSuccess, markProgress]);
 
   return (
     <main className="graph-paper min-h-screen px-4 py-8 text-stone-900 sm:px-8">
@@ -13,6 +23,9 @@ export function LessonPage() {
         {lesson.isPending && <p role="status" className="mt-6">Đang tải bài học...</p>}
         {lesson.isError && <p role="alert" className="mt-6 text-red-700">Không tải được bài học: {lesson.error.message}</p>}
         {lesson.data && <article className="mt-6"><h1 className="text-3xl font-extrabold">{lesson.data.title}</h1><div className="mt-5 whitespace-pre-wrap text-base leading-7 text-stone-700">{lesson.data.content || 'Nội dung bài học đang được cập nhật.'}</div></article>}
+        {lesson.data && <div className="mt-6 flex flex-wrap gap-4"><Link to={`/lessons/${lessonId}/quiz`} className="rounded bg-rose-700 px-4 py-3 font-bold text-white">Làm Quiz</Link><button disabled={update.isPending} onClick={() => update.mutate('Completed')} className="rounded border-2 px-4 py-3 font-bold">Đánh dấu hoàn thành</button><Link to="/learning" className="p-3 font-bold">Xem tiến độ</Link></div>}
+        {update.isError && <p role="alert" className="mt-4">{update.error.message}</p>}
+        {update.isSuccess && update.variables === 'Completed' && <p role="status" className="mt-4">Đã lưu hoàn thành bài học.</p>}
       </div>
     </main>
   );
