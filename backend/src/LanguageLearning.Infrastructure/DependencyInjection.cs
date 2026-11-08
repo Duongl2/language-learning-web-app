@@ -1,5 +1,6 @@
 ﻿
 using LanguageLearning.Application.Interfaces;
+using LanguageLearning.Application.Services;
 using LanguageLearning.Infrastructure.Data;
 using LanguageLearning.Infrastructure.Repositories;
 using LanguageLearning.Infrastructure.Security;
@@ -38,6 +39,9 @@ public static class DependencyInjection
         services.AddScoped<ISyncRepository, SyncRepository>();
         services.AddScoped<ISyncPullRepository, SyncPullRepository>();
         services.AddScoped<ILanguageRepository, LanguageRepository>();
+        services.AddScoped<IStatisticsRepository, StatisticsRepository>();
+        services.AddScoped<StatisticsService>();
+        services.AddSingleton(TimeProvider.System);
         services.AddScoped<IAdminContentRepository, AdminContentRepository>();
         services.AddScoped<IPublishedContentRepository, PublishedContentRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
