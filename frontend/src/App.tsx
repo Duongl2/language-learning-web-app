@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { useAuth } from './features/auth/authContext';
 import { MyDecksContainer } from './features/decks/MyDecksContainer';
@@ -29,9 +29,10 @@ import {
 export function App() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [currentView, setCurrentView] = useState<
   'flashcard' | 'lessonList' | 'quiz' | 'myDecks'
->('flashcard');
+>(() => searchParams.get('view') === 'myDecks' ? 'myDecks' : 'flashcard');
   const [activeTabSub, setActiveTabSub] = useState<'vocab' | 'example'>('vocab');
   const [isFlipped, setIsFlipped] = useState(false);
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
