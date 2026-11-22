@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  db:
+    restart: always
+
+  api:
+    restart: always
+    environment:
+      ASPNETCORE_ENVIRONMENT: Staging
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  web:
+    restart: always
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:80/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
