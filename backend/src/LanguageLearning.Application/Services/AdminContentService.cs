@@ -126,6 +126,58 @@ public class AdminContentService
         return Map(lesson);
     }
 
+    public async Task<PagedResponse<VocabularyResponse>> ListVocabulariesAsync(Guid lessonId, string? keyword, PaginationParams pagination, CancellationToken ct)
+    {
+        await RequiredAsync<Lesson>(lessonId, ct);
+        var page = await _repository.ListVocabulariesAsync(lessonId, keyword, pagination, ct);
+        return new(page.Items.Select(Map).ToList(), page.Page, page.PageSize, page.TotalItems);
+    }
+    public async Task<VocabularyResponse> GetVocabularyAsync(Guid id, CancellationToken ct) =>
+        Map(await RequiredAsync<Vocabulary>(id, ct));
+    public async Task<VocabularyResponse> CreateVocabularyAsync(VocabularyInput input, CancellationToken ct)
+    {
+        ValidateVocabulary(input);
+        var value = new Vocabulary { LessonId = input.LessonId, LanguageId = await GetLessonLanguageIdAsync(input.LessonId, ct) };
+        SetVocabulary(value, input);
+        await _repository.AddAsync(value, ct);
+        await _repository.SaveAsync(ct);
+        return Map(value);
+    }
+    public async Task<VocabularyResponse> UpdateVocabularyAsync(Guid id, VocabularyInput input, CancellationToken ct)
+    {
+        ValidateVocabulary(input);
+        var value = await RequiredAsync<Vocabulary>(id, ct);
+        value.LessonId = input.LessonId;
+        value.LanguageId = await GetLessonLanguageIdAsync(input.LessonId, ct);
+        SetVocabulary(value, input);
+        value.UpdatedAt = DateTime.UtcNow;
+        await _repository.SaveAsync(ct);
+        return Map(value);
+    }
+
+    private static void ValidateVocabulary(VocabularyInput input)
+    {
+        RequiredText(input.Term, "Term");
+        RequiredText(input.Phonetic, "Phonetic");
+        RequiredText(input.Meaning, "Meaning");
+        if (input.Example?.Length > 2000) throw new ArgumentException("Example cannot exceed 2000 characters.");
+    }
+    private async Task<Guid> GetLessonLanguageIdAsync(Guid lessonId, CancellationToken ct)
+    {
+        var lesson = await RequiredAsync<Lesson>(lessonId, ct);
+        var unit = await RequiredAsync<Unit>(lesson.UnitId, ct);
+        return (await RequiredAsync<Course>(unit.CourseId, ct)).LanguageId;
+    }
+    private static void SetVocabulary(Vocabulary value, VocabularyInput input)
+    {
+        value.Term = input.Term.Trim();
+        value.Phonetic = input.Phonetic.Trim();
+        value.Meaning = input.Meaning.Trim();
+        value.Example = input.Example?.Trim() ?? string.Empty;
+        value.AudioUrl = input.AudioUrl?.Trim();
+        value.ImageUrl = input.ImageUrl?.Trim();
+    }
+
     public async Task DeleteAsync<T>(Guid id, CancellationToken ct) where T : BaseEntity
     {
         var entity = await RequiredAsync<T>(id, ct);
@@ -210,4 +262,5 @@ public class AdminContentService
     private static CourseResponse Map(Course value) => new(value.Id, value.LanguageId, value.Title, value.Level, value.Description, value.Status);
     private static UnitResponse Map(Unit value) => new(value.Id, value.CourseId, value.Title, value.SortOrder);
     private static LessonResponse Map(Lesson value) => new(value.Id, value.UnitId, value.Title, value.Content, value.SortOrder, value.Status);
+    private static VocabularyResponse Map(Vocabulary value) => new(value.Id, value.LessonId, value.LanguageId, value.Term, value.Phonetic, value.Meaning, value.Example, value.AudioUrl, value.ImageUrl);
 }

@@ -32,6 +32,26 @@ public class AdminContentRepository : IAdminContentRepository
     public Task<T?> FindAsync<T>(Guid id, CancellationToken cancellationToken = default) where T : BaseEntity =>
         _context.Set<T>().FirstOrDefaultAsync(entity => entity.Id == id, cancellationToken);
 
+    public async Task<PagedResponse<Vocabulary>> ListVocabulariesAsync(Guid lessonId, string? keyword, PaginationParams pagination, CancellationToken cancellationToken = default)
+    {
+        var query = _context.Vocabularies.AsNoTracking().Where(value => value.LessonId == lessonId);
+        if (!string.IsNullOrWhiteSpace(keyword))
+        {
+            var pattern = $"%{EscapeLike(keyword.Trim())}%";
+            query = query.Where(value => EF.Functions.Like(value.Term, pattern, "\\") ||
+                EF.Functions.Like(value.Phonetic, pattern, "\\") ||
+                EF.Functions.Like(value.Meaning, pattern, "\\") ||
+                EF.Functions.Like(value.Example, pattern, "\\"));
+        }
+        var total = await query.CountAsync(cancellationToken);
+        var items = await query.OrderBy(value => value.Term).ThenBy(value => value.Id)
+            .Skip((pagination.Page - 1) * pagination.PageSize).Take(pagination.PageSize)
+            .ToListAsync(cancellationToken);
+        return new(items, pagination.Page, pagination.PageSize, total);
+    }
+
+    private static string EscapeLike(string value) => value.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_");
+
     public Task AddAsync<T>(T entity, CancellationToken cancellationToken = default) where T : BaseEntity =>
         _context.Set<T>().AddAsync(entity, cancellationToken).AsTask();
 

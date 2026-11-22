@@ -101,4 +101,25 @@ public class AdminContentController : ControllerBase
         await _content.DeleteAsync<Lesson>(id, ct);
         return NoContent();
     }
+
+    [HttpGet("vocabularies")]
+    public async Task<IActionResult> ListVocabularies([FromQuery] Guid lessonId, [FromQuery] string? keyword, [FromQuery] PaginationParams pagination, CancellationToken ct) =>
+        Ok(await _content.ListVocabulariesAsync(lessonId, keyword, pagination, ct));
+    [HttpGet("vocabularies/{id:guid}")]
+    public async Task<IActionResult> GetVocabulary(Guid id, CancellationToken ct) => Ok(await _content.GetVocabularyAsync(id, ct));
+    [HttpPost("vocabularies")]
+    public async Task<IActionResult> CreateVocabulary(VocabularyInput input, CancellationToken ct)
+    {
+        var value = await _content.CreateVocabularyAsync(input, ct);
+        return CreatedAtAction(nameof(GetVocabulary), new { id = value.Id }, value);
+    }
+    [HttpPut("vocabularies/{id:guid}")]
+    public async Task<IActionResult> UpdateVocabulary(Guid id, VocabularyInput input, CancellationToken ct) =>
+        Ok(await _content.UpdateVocabularyAsync(id, input, ct));
+    [HttpDelete("vocabularies/{id:guid}")]
+    public async Task<IActionResult> DeleteVocabulary(Guid id, CancellationToken ct)
+    {
+        await _content.DeleteAsync<Vocabulary>(id, ct);
+        return NoContent();
+    }
 }
