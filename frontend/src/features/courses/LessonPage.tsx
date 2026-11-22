@@ -76,6 +76,7 @@ export function LessonPage() {
                 <Link to="/?view=quiz" className="inline-flex items-center gap-2 rounded-lg border-2 border-stone-900 bg-rose-500 px-4 py-3 text-sm font-bold text-white">Chuyển sang làm Quiz luyện tập chung <ArrowRight size={17} aria-hidden="true" /></Link>
               )}
             </nav>
+            <Link to={`/lessons/${lessonId}/quiz`} className="mt-6 inline-block rounded bg-rose-700 px-4 py-3 font-bold text-white">Làm Quiz</Link>
           </>
         )}
       </div>
