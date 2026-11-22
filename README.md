@@ -1,6 +1,6 @@
 # 🌐 Language Learning Web Application
 
-[![Build & Test CI](https://github.com/your-org/language-learning-web-app/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/your-org/language-learning-web-app/actions)
+[![Build & Test CI](https://github.com/NguyenLuuKienn/language-learning-web-app/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/NguyenLuuKienn/language-learning-web-app/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![.NET Version](https://img.shields.io/badge/.NET-8.0%2F9.0-purple.svg)](https://dotnet.microsoft.com/)
 [![React Version](https://img.shields.io/badge/React-18%2B-blue.svg)](https://react.dev/)
@@ -68,7 +68,7 @@
 ### 2. Chạy toàn bộ hệ thống bằng Docker Compose (Khuyên dùng)
 ```bash
 # Clone repository
-git clone https://github.com/your-org/language-learning-web-app.git
+git clone https://github.com/NguyenLuuKienn/language-learning-web-app.git
 cd language-learning-web-app
 
 # Thiết lập file biến môi trường
