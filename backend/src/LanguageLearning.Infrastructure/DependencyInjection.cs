@@ -43,6 +43,7 @@ public static class DependencyInjection
         services.AddScoped<IProgressRepository, ProgressRepository>();
         services.AddScoped<ProgressService>();
         services.AddScoped<ISyncRepository, SyncRepository>();
+        services.AddScoped<CsvService>();
         services.AddScoped<ISyncPullRepository, SyncPullRepository>();
         services.AddScoped<ILanguageRepository, LanguageRepository>();
         services.AddScoped<IStatisticsRepository, StatisticsRepository>();
